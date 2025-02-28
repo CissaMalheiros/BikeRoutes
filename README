@@ -38,15 +38,15 @@ CiclistaApp é um aplicativo móvel desenvolvido para ciclistas, permitindo que 
 
 2. Instale as dependências:
 
-npm install
+> npm install
 
 1. Inicie o aplicativo:
 
-npm start
+> npx expo start
 
 ## Uso
 
-Abra o aplicativo no seu dispositivo ou emulador.
+Abra o aplicativo no seu emulador android.
 Na tela de boas-vindas, escolha entre "Login" ou "Cadastro".
 Após o login, você será direcionado para a tela inicial, onde poderá escolher o tipo de trajeto para registrar.
 Durante o trajeto, o aplicativo registrará sua localização e exibirá a rota no mapa.
