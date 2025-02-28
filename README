@@ -1,0 +1,53 @@
+# CiclistaApp
+
+CiclistaApp é um aplicativo móvel desenvolvido para ciclistas, permitindo que eles registrem suas rotas de ciclismo, façam login, cadastrem-se e visualizem suas rotas em um mapa.
+
+## Funcionalidades
+
+- **Cadastro de Usuário**: Permite que novos usuários se cadastrem no aplicativo.
+- **Login de Usuário**: Permite que usuários existentes façam login.
+- **Registro de Rotas**: Registra as rotas de ciclismo dos usuários, categorizando-as por tipo (trabalho, escola, casa, passeio).
+- **Visualização de Rotas**: Exibe as rotas registradas em um mapa.
+- **Resumo de Trajeto**: Mostra um resumo do trajeto após o término do registro.
+
+## Tecnologias Utilizadas
+
+- **React Native**: Framework para desenvolvimento de aplicativos móveis.
+- **Expo**: Plataforma para desenvolvimento de aplicativos React Native.
+- **SQLite**: Banco de dados local para armazenamento de dados do usuário.
+- **React Navigation**: Biblioteca para navegação entre telas no React Native.
+- **Expo Location**: Biblioteca para acesso à localização do dispositivo.
+- **React Native Maps**: Biblioteca para exibição de mapas e rotas.
+
+## Estrutura do Projeto
+
+- `App.js`: Arquivo principal do aplicativo, contendo a navegação e as telas.
+- `CadastroScreen.js`: Tela de cadastro de usuário.
+- `LoginScreen.js`: Tela de login de usuário.
+- `WelcomeScreen.js`: Tela de boas-vindas com opções de login e cadastro.
+- `database.js`: Arquivo de configuração e manipulação do banco de dados SQLite.
+- `assets/`: Pasta contendo os arquivos de imagem utilizados no aplicativo.
+- `package.json`: Arquivo de configuração do projeto e dependências.
+
+## Instalação
+
+1. Clone o repositório:
+
+   git clone [https://github.com/seu-usuario/CiclistaApp.git](https://github.com/seu-usuario/CiclistaApp.git)
+   cd CiclistaApp
+
+2. Instale as dependências:
+
+npm install
+
+1. Inicie o aplicativo:
+
+npm start
+
+## Uso
+
+Abra o aplicativo no seu dispositivo ou emulador.
+Na tela de boas-vindas, escolha entre "Login" ou "Cadastro".
+Após o login, você será direcionado para a tela inicial, onde poderá escolher o tipo de trajeto para registrar.
+Durante o trajeto, o aplicativo registrará sua localização e exibirá a rota no mapa.
+Ao finalizar o trajeto, um resumo será exibido com o tempo total e a rota percorrida.
