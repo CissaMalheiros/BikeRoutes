@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, ImageBackground, Alert } from 'react-native';
 import { addUser } from './database'; // Importar a função addUser
+import * as Device from 'expo-device'; // Importar expo-device para obter informações do dispositivo
 
 export default function CadastroScreen({ navigation }) {
   const [cpf, setCpf] = useState('');
@@ -11,6 +12,31 @@ export default function CadastroScreen({ navigation }) {
   const [dataNascimento, setDataNascimento] = useState('');
   const [senha, setSenha] = useState('');
 
+  const validateCPF = (cpf) => {
+    const cpfRegex = /^\d{11}$/;
+    return cpfRegex.test(cpf);
+  };
+
+  const validateNome = (nome) => {
+    const nomeRegex = /^[A-Za-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ ]+$/;
+    return nomeRegex.test(nome);
+  };
+
+  const validateTelefone = (telefone) => {
+    const telefoneRegex = /^\d{10,11}$/;
+    return telefoneRegex.test(telefone);
+  };
+
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validateDataNascimento = (data) => {
+    const dataRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+    return dataRegex.test(data);
+  };
+
   const handleCadastro = async () => {
     try {
       // Verifica se todos os campos foram preenchidos
@@ -19,8 +45,42 @@ export default function CadastroScreen({ navigation }) {
         return;
       }
 
+      // Validações
+      if (!validateCPF(cpf)) {
+        Alert.alert('Erro', 'CPF inválido. Deve conter exatamente 11 números.');
+        return;
+      }
+
+      if (!validateNome(nome)) {
+        Alert.alert('Erro', 'Nome inválido. Deve conter apenas letras.');
+        return;
+      }
+
+      if (!validateTelefone(telefone)) {
+        Alert.alert('Erro', 'Telefone inválido. Deve conter 10 ou 11 números.');
+        return;
+      }
+
+      if (!validateEmail(email)) {
+        Alert.alert('Erro', 'Email inválido.');
+        return;
+      }
+
+      if (!validateDataNascimento(dataNascimento)) {
+        Alert.alert('Erro', 'Data de nascimento inválida. Use o formato dd/MM/yyyy.');
+        return;
+      }
+
+      // Coletar informações do dispositivo
+      const deviceInfo = {
+        fabricante: Device.manufacturer,
+        modelo: Device.modelName,
+        serial: Device.osBuildId,
+        versao: Device.osVersion,
+      };
+
       // Adiciona o usuário ao banco de dados
-      await addUser(cpf, nome, telefone, sexo, email, dataNascimento, senha);
+      await addUser(cpf, nome, telefone, sexo, email, dataNascimento, senha, deviceInfo);
 
       // Exibe uma mensagem de sucesso
       Alert.alert('Sucesso', 'Usuário cadastrado com sucesso!');
@@ -43,6 +103,8 @@ export default function CadastroScreen({ navigation }) {
           placeholder="CPF"
           value={cpf}
           onChangeText={setCpf}
+          keyboardType="numeric"
+          maxLength={11}
         />
         <TextInput
           style={styles.input}
@@ -55,6 +117,7 @@ export default function CadastroScreen({ navigation }) {
           placeholder="Telefone"
           value={telefone}
           onChangeText={setTelefone}
+          keyboardType="phone-pad"
         />
         <TextInput
           style={styles.input}
@@ -67,10 +130,11 @@ export default function CadastroScreen({ navigation }) {
           placeholder="Email"
           value={email}
           onChangeText={setEmail}
+          keyboardType="email-address"
         />
         <TextInput
           style={styles.input}
-          placeholder="Data de Nascimento"
+          placeholder="Data de Nascimento (dd/MM/yyyy)"
           value={dataNascimento}
           onChangeText={setDataNascimento}
         />

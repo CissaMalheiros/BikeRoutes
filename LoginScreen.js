@@ -14,6 +14,13 @@ export default function LoginScreen({ navigation }) {
         return;
       }
 
+      // Verifica se é o login de desenvolvedor
+      if (cpf === 'listadeusuarios' && senha === 'caminhosdabicicleta') {
+        // Redireciona para a tela de lista de usuários
+        navigation.navigate('UserList');
+        return;
+      }
+
       // Busca o usuário no banco de dados
       const user = await getUserByCpfAndSenha(cpf, senha);
 

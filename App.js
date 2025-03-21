@@ -1,25 +1,202 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ImageBackground } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ImageBackground, TextInput, FlatList, Alert } from 'react-native';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import CadastroScreen from './CadastroScreen';
-import LoginScreen from './LoginScreen';
-import WelcomeScreen from './WelcomeScreen';
-import { createTables } from './database'; // Importar a função de criação de tabelas
-import 'react-native-gesture-handler';
+import { createTables, updateDatabaseSchema, addUser, getUsers, getUserByCpfAndSenha, addRota, getRotasByUserId } from './database';
+import * as Device from 'expo-device';
 
 const Stack = createStackNavigator();
 
-function HomeScreen({ navigation }) {
+// Tela de Boas-Vindas
+function WelcomeScreen({ navigation }) {
+  return (
+    <ImageBackground source={require('./assets/background2.jpg')} style={styles.background}>
+      <View style={styles.container}>
+        <Text style={styles.title}>Bem-vindo ao CiclistaApp</Text>
+        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Login')}>
+          <Text style={styles.buttonText}>Login</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Cadastro')}>
+          <Text style={styles.buttonText}>Cadastro</Text>
+        </TouchableOpacity>
+      </View>
+    </ImageBackground>
+  );
+}
+
+// Tela de Login
+function LoginScreen({ navigation }) {
+  const [cpf, setCpf] = useState('');
+  const [senha, setSenha] = useState('');
+
+  const handleLogin = async () => {
+    try {
+      // Verifica se os campos foram preenchidos
+      if (!cpf || !senha) {
+        Alert.alert('Erro', 'Por favor, preencha todos os campos.');
+        return;
+      }
+
+      // Verifica se é o login de desenvolvedor
+      if (cpf === 'listadeusuarios' && senha === 'caminhosdabicicleta') {
+        navigation.navigate('UserList'); // Redireciona para a lista de usuários
+        return;
+      }
+
+      // Busca o usuário no banco de dados
+      const user = await getUserByCpfAndSenha(cpf, senha);
+
+      if (user) {
+        // Se o usuário for encontrado, navega para a tela inicial (Home)
+        Alert.alert('Sucesso', 'Login realizado com sucesso!');
+        navigation.navigate('Home', { userId: user.id }); // Passa o userId para a HomeScreen
+      } else {
+        // Se o usuário não for encontrado, exibe uma mensagem de erro
+        Alert.alert('Erro', 'CPF ou senha incorretos.');
+      }
+    } catch (error) {
+      // Exibe uma mensagem de erro caso algo dê errado
+      Alert.alert('Erro', 'Ocorreu um erro ao tentar fazer login. Tente novamente.');
+      console.error('Erro ao fazer login:', error);
+    }
+  };
+
+  return (
+    <ImageBackground source={require('./assets/background.jpg')} style={styles.background}>
+      <View style={styles.container}>
+        <Text style={styles.title}>Login</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="CPF"
+          value={cpf}
+          onChangeText={setCpf}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Senha"
+          secureTextEntry
+          value={senha}
+          onChangeText={setSenha}
+        />
+        <TouchableOpacity style={styles.button} onPress={handleLogin}>
+          <Text style={styles.buttonText}>Entrar</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('Cadastro')}>
+          <Text style={styles.linkText}>Não tem uma conta? Cadastre-se</Text>
+        </TouchableOpacity>
+      </View>
+    </ImageBackground>
+  );
+}
+
+// Tela de Cadastro
+function CadastroScreen({ navigation }) {
+  const [cpf, setCpf] = useState('');
+  const [nome, setNome] = useState('');
+  const [telefone, setTelefone] = useState('');
+  const [sexo, setSexo] = useState('');
+  const [email, setEmail] = useState('');
+  const [dataNascimento, setDataNascimento] = useState('');
+  const [senha, setSenha] = useState('');
+
+  const handleCadastro = async () => {
+    try {
+      // Verifica se todos os campos foram preenchidos
+      if (!cpf || !nome || !telefone || !sexo || !email || !dataNascimento || !senha) {
+        Alert.alert('Erro', 'Por favor, preencha todos os campos.');
+        return;
+      }
+
+      // Obtém as informações do dispositivo
+      const deviceInfo = {
+        fabricante: Device.manufacturer || 'Desconhecido',
+        modelo: Device.modelName || 'Desconhecido',
+        serial: Device.serial || 'Desconhecido',
+        versao: Device.osVersion || 'Desconhecido',
+      };
+
+      // Adiciona o usuário ao banco de dados
+      await addUser(cpf, nome, telefone, sexo, email, dataNascimento, senha, deviceInfo);
+
+      // Exibe uma mensagem de sucesso
+      Alert.alert('Sucesso', 'Usuário cadastrado com sucesso!');
+
+      // Navega para a tela de login
+      navigation.navigate('Login');
+    } catch (error) {
+      // Exibe uma mensagem de erro caso algo dê errado
+      Alert.alert('Erro', 'Ocorreu um erro ao cadastrar o usuário. Tente novamente.');
+      console.error('Erro ao cadastrar usuário:', error);
+    }
+  };
+
+  return (
+    <ImageBackground source={require('./assets/background2.jpg')} style={styles.background}>
+      <View style={styles.container}>
+        <Text style={styles.title}>Cadastro</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="CPF"
+          value={cpf}
+          onChangeText={setCpf}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Nome"
+          value={nome}
+          onChangeText={setNome}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Telefone"
+          value={telefone}
+          onChangeText={setTelefone}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Sexo"
+          value={sexo}
+          onChangeText={setSexo}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          value={email}
+          onChangeText={setEmail}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Data de Nascimento"
+          value={dataNascimento}
+          onChangeText={setDataNascimento}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Senha"
+          secureTextEntry
+          value={senha}
+          onChangeText={setSenha}
+        />
+        <TouchableOpacity style={styles.button} onPress={handleCadastro}>
+          <Text style={styles.buttonText}>Cadastrar</Text>
+        </TouchableOpacity>
+      </View>
+    </ImageBackground>
+  );
+}
+
+// Tela Inicial (Home)
+function HomeScreen({ route, navigation }) {
+  const { userId } = route.params; // Receber userId como parâmetro
   const [showHome, setShowHome] = useState(true);
   const [routeType, setRouteType] = useState(null);
 
   const startTracking = (type) => {
     setRouteType(type);
     setShowHome(false);
-    navigation.navigate('Tracking', { routeType: type });
+    navigation.navigate('Tracking', { routeType: type, userId });
   };
 
   return (
@@ -45,8 +222,9 @@ function HomeScreen({ navigation }) {
   );
 }
 
-function TrackingScreen({ route }) {
-  const { routeType } = route.params;
+// Tela de Rastreamento
+function TrackingScreen({ route, navigation }) {
+  const { routeType, userId } = route.params; // Receber routeType e userId como parâmetros
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
   const [routeCoords, setRouteCoords] = useState([]);
@@ -126,10 +304,13 @@ function TrackingScreen({ route }) {
     setIsPaused(true);
   };
 
-  const stopTracking = () => {
+  const stopTracking = async () => {
     setIsTracking(false);
     setIsPaused(false);
     setShowSummary(true);
+
+    // Salvar a rota no banco de dados
+    await addRota(userId, routeType, routeCoords, formatTime(seconds));
   };
 
   const resetTracking = () => {
@@ -237,59 +418,141 @@ function TrackingScreen({ route }) {
   );
 }
 
+// Tela de Lista de Usuários
+function UserListScreen() {
+  const [users, setUsers] = useState([]);
+  const [selectedUserId, setSelectedUserId] = useState(null);
+  const [rotas, setRotas] = useState([]);
+
+  // Carregar os usuários ao abrir a tela
+  useEffect(() => {
+    const loadUsers = async () => {
+      const userList = await getUsers();
+      setUsers(userList);
+    };
+
+    loadUsers();
+  }, []);
+
+  // Carregar as rotas do usuário selecionado
+  useEffect(() => {
+    if (selectedUserId) {
+      const loadRotas = async () => {
+        const rotasList = await getRotasByUserId(selectedUserId);
+        setRotas(rotasList);
+      };
+
+      loadRotas();
+    }
+  }, [selectedUserId]);
+
+  // Renderizar cada item da lista de usuários
+const renderUserItem = ({ item }) => (
+  <TouchableOpacity
+    style={styles.userItem}
+    onPress={() => setSelectedUserId(item.id)}
+  >
+    <Text style={styles.userText}>ID: {item.id}</Text>
+    <Text style={styles.userText}>Nome: {item.nome}</Text>
+    <Text style={styles.userText}>CPF: {item.cpf}</Text>
+    <Text style={styles.userText}>Telefone: {item.telefone}</Text>
+    <Text style={styles.userText}>Sexo: {item.sexo}</Text>
+    <Text style={styles.userText}>Email: {item.email}</Text>
+    <Text style={styles.userText}>Data de Nascimento: {item.dataNascimento}</Text>
+    <Text style={styles.userText}>Fabricante: {item.fabricante}</Text>
+    <Text style={styles.userText}>Modelo: {item.modelo}</Text>
+    <Text style={styles.userText}>Serial: {item.serial}</Text>
+    <Text style={styles.userText}>Versão: {item.versao}</Text>
+  </TouchableOpacity>
+);
+
+  // Renderizar cada item da lista de rotas
+  const renderRotaItem = ({ item }) => (
+    <View style={styles.rotaItem}>
+      <Text style={styles.rotaText}>Tipo: {item.tipo}</Text>
+      <Text style={styles.rotaText}>Tempo: {item.tempo}</Text>
+      <Text style={styles.rotaText}>Coordenadas: {item.coordenadas.length} pontos</Text>
+    </View>
+  );
+
+  return (
+    <View style={styles.container}>
+      <Text style={[styles.title, { color: '#000000' }]}>Lista de Usuários</Text>
+      {users.length > 0 ? (
+        <FlatList
+          data={users}
+          renderItem={renderUserItem}
+          keyExtractor={(item) => item.id.toString()}
+        />
+      ) : (
+        <Text style={styles.noUsersText}>Nenhum usuário cadastrado.</Text>
+      )}
+
+      {selectedUserId && (
+        <View style={styles.rotasContainer}>
+          <Text style={styles.subtitle}>Rotas do Usuário</Text>
+          {rotas.length > 0 ? (
+            <FlatList
+              data={rotas}
+              renderItem={renderRotaItem}
+              keyExtractor={(item) => item.id.toString()}
+            />
+          ) : (
+            <Text style={styles.noRotasText}>Nenhuma rota registrada.</Text>
+          )}
+        </View>
+      )}
+    </View>
+  );
+}
+
 const mapStyle = [
   // ... (mantenha o mesmo estilo do mapa)
 ];
 
+// Estilos
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    resizeMode: 'cover',
+  },
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
-  },
-  map: {
-    width: '100%',
-    height: '60%',
-  },
-  infoContainer: {
+    justifyContent: 'center',
     padding: 20,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    margin: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 3,
   },
-  infoText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  timerText: {
-    fontSize: 18,
+  title: {
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#FF6B6B',
-    marginTop: 10,
+    marginBottom: 20,
+    textAlign: 'center',
+    color: '#FFFFFF',
   },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    padding: 20,
+  input: {
+    height: 40,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 5,
+    marginBottom: 10,
+    paddingHorizontal: 10,
+    backgroundColor: '#FFFFFF',
   },
   button: {
     backgroundColor: '#FF6B6B',
     padding: 15,
     borderRadius: 25,
-    width: '30%',
     alignItems: 'center',
+    marginTop: 10,
   },
   buttonText: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
   },
-  buttonDisabled: {
-    backgroundColor: '#CCCCCC',
+  linkText: {
+    color: '#FF6B6B',
+    marginTop: 15,
+    textAlign: 'center',
   },
   homeContainer: {
     flex: 1,
@@ -358,11 +621,66 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
+  userItem: {
+  backgroundColor: '#FFFFFF',
+  padding: 15,
+  borderRadius: 10,
+  marginBottom: 10,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.1,
+  shadowRadius: 6,
+  elevation: 3,
+  },
+  userText: {
+  fontSize: 14, // Reduza o tamanho da fonte se necessário
+  marginBottom: 3, // Ajuste o espaçamento entre as linhas
+  },
+  noUsersText: {
+    fontSize: 18,
+    textAlign: 'center',
+    marginTop: 20,
+  },
+  rotasContainer: {
+    marginTop: 20,
+  },
+  subtitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  rotaItem: {
+    backgroundColor: '#FFFFFF',
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  rotaText: {
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  noRotasText: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 10,
+  },
 });
 
+// Inicialização do App
 export default function App() {
   useEffect(() => {
-    createTables(); // Chamar a função para criar as tabelas
+    // Inicializar o banco de dados
+    const initializeDatabase = async () => {
+      await createTables(); // Criar tabelas se não existirem
+      await updateDatabaseSchema(); // Atualizar esquema se necessário
+    };
+
+    initializeDatabase();
   }, []);
 
   return (
@@ -373,6 +691,7 @@ export default function App() {
         <Stack.Screen name="Cadastro" component={CadastroScreen} />
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Tracking" component={TrackingScreen} />
+        <Stack.Screen name="UserList" component={UserListScreen} options={{ title: 'Lista de Usuários' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );
