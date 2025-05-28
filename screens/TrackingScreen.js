@@ -1,10 +1,59 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, Alert } from 'react-native';
-import MapView, { Marker, Polyline } from 'react-native-maps';
+import { View, Text, TouchableOpacity, Alert, Platform } from 'react-native';
+import { WebView } from 'react-native-webview';
 import * as Location from 'expo-location';
 import styles from '../styles/styles.js';
 import { addRota } from '../database';
 import { formatTime } from '../utils/format';
+
+async function pedirPermissoes() {
+  const { status: fgStatus } = await Location.requestForegroundPermissionsAsync();
+  if (fgStatus !== 'granted') {
+    alert('Permissão de localização negada!');
+    return false;
+  }
+  const { status: bgStatus } = await Location.requestBackgroundPermissionsAsync();
+  if (bgStatus !== 'granted') {
+    alert('Permissão de localização em segundo plano negada!');
+    return false;
+  }
+  return true;
+}
+
+function getLeafletHtml(location, routeCoords) {
+  // Gera o HTML do mapa Leaflet com OSM, marcador e rota
+  const lat = location ? location.coords.latitude : -23.5505;
+  const lng = location ? location.coords.longitude : -46.6333;
+  const polyline = routeCoords.length > 0
+    ? `L.polyline([${routeCoords.map(loc => `[${loc.coords.latitude},${loc.coords.longitude}]`).join(',')}], {color: '#FF6B6B', weight: 4}).addTo(map);`
+    : '';
+  const marker = location
+    ? `L.marker([${lat},${lng}]).addTo(map);`
+    : '';
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+      <link rel='stylesheet' href='https://unpkg.com/leaflet/dist/leaflet.css'/>
+      <style>html, body, #map { height: 100%; margin: 0; padding: 0; }</style>
+    </head>
+    <body>
+      <div id='map' style='width:100vw;height:100vh;'></div>
+      <script src='https://unpkg.com/leaflet/dist/leaflet.js'></script>
+      <script>
+        var map = L.map('map').setView([${lat}, ${lng}], 16);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '© OpenStreetMap'
+        }).addTo(map);
+        ${marker}
+        ${polyline}
+      </script>
+    </body>
+    </html>
+  `;
+}
 
 export default function TrackingScreen({ route, navigation }) {
   const { routeType, userId } = route.params;
@@ -16,7 +65,6 @@ export default function TrackingScreen({ route, navigation }) {
   const [seconds, setSeconds] = useState(0);
   const [showSummary, setShowSummary] = useState(false);
   const timerRef = useRef(null);
-  const mapRef = useRef(null);
   const locationSubscription = useRef(null);
 
   useEffect(() => {
@@ -45,14 +93,6 @@ export default function TrackingScreen({ route, navigation }) {
         (newLocation) => {
           setLocation(newLocation);
           setRouteCoords((prevRoute) => [...prevRoute, newLocation]);
-          if (mapRef.current) {
-            mapRef.current.animateToRegion({
-              latitude: newLocation.coords.latitude,
-              longitude: newLocation.coords.longitude,
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
-            });
-          }
         }
       ).then(subscription => {
         locationSubscription.current = subscription;
@@ -113,35 +153,17 @@ export default function TrackingScreen({ route, navigation }) {
 
   if (showSummary) {
     return (
-    <View style={styles.container}>
-      <MapView
-        ref={mapRef}
-        style={styles.map}
-        initialRegion={
-          location
-            ? {
-                latitude: location.coords.latitude,
-                longitude: location.coords.longitude,
-                latitudeDelta: 0.01,
-                longitudeDelta: 0.01,
-              }
-            : {
-                latitude: -23.5505,
-                longitude: -46.6333,
-                latitudeDelta: 0.1,
-                longitudeDelta: 0.1,
-              }
-        }
-      >
-        {location && <Marker coordinate={location.coords} />}
-        {routeCoords.length > 0 && (
-          <Polyline
-            coordinates={routeCoords.map((loc) => loc.coords)}
-            strokeColor="#FF6B6B"
-            strokeWidth={4}
+      <View style={styles.container}>
+        {location && (
+          <WebView
+            originWhitelist={['*']}
+            source={{ html: getLeafletHtml(location, routeCoords) }}
+            style={styles.map}
+            javaScriptEnabled={true}
+            domStorageEnabled={true}
           />
         )}
-      </MapView>
+        <Text style={styles.summaryText}>Tipo de trajeto: {routeType}</Text>
         <Text style={styles.summaryText}>Tempo total: {formatTime(seconds)}</Text>
         <TouchableOpacity style={styles.summaryButton} onPress={resetTracking}>
           <Text style={styles.summaryButtonText}>Reiniciar</Text>
@@ -152,34 +174,19 @@ export default function TrackingScreen({ route, navigation }) {
 
   return (
     <View style={styles.container}>
-      <MapView
-        ref={mapRef}
-        style={styles.map}
-        region={
-          location
-            ? {
-                latitude: location.coords.latitude,
-                longitude: location.coords.longitude,
-                latitudeDelta: 0.01,
-                longitudeDelta: 0.01,
-              }
-            : {
-                latitude: -23.5505,
-                longitude: -46.6333,
-                latitudeDelta: 0.1,
-                longitudeDelta: 0.1,
-              }
-        }
-      >
-        {location && <Marker coordinate={location.coords} />}
-        {routeCoords.length > 0 && (
-          <Polyline
-            coordinates={routeCoords.map((loc) => loc.coords)}
-            strokeColor="#FF6B6B"
-            strokeWidth={4}
-          />
-        )}
-      </MapView>
+      {location ? (
+        <WebView
+          originWhitelist={['*']}
+          source={{ html: getLeafletHtml(location, routeCoords) }}
+          style={styles.map}
+          javaScriptEnabled={true}
+          domStorageEnabled={true}
+        />
+      ) : (
+        <View style={[styles.map, {alignItems:'center',justifyContent:'center'}]}>
+          <Text>Inicie o trajeto...</Text>
+        </View>
+      )}
       <View style={styles.infoContainer}>
         <Text style={styles.infoText}>{text}</Text>
         <Text style={styles.timerText}>Tempo de percurso: {formatTime(seconds)}</Text>

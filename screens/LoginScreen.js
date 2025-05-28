@@ -6,6 +6,16 @@ import { getUserByCpfAndSenha } from '../database';
 export default function LoginScreen({ navigation }) {
   const [cpf, setCpf] = useState('');
   const [senha, setSenha] = useState('');
+  const [showSenha, setShowSenha] = useState(false);
+
+  // Função para formatar CPF automaticamente
+  const formatCpf = (value) => {
+    value = value.replace(/\D/g, '');
+    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+    value = value.replace(/(\d{3})(\d)/, '$1.$2');
+    value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    return value;
+  };
 
   const handleLogin = async () => {
     if (!cpf || !senha) {
@@ -34,8 +44,28 @@ export default function LoginScreen({ navigation }) {
     <ImageBackground source={require('../assets/background.jpg')} style={styles.background}>
       <View style={styles.container}>
         <Text style={styles.title}>Login</Text>
-        <TextInput style={styles.input} placeholder="CPF" value={cpf} onChangeText={setCpf} />
-        <TextInput style={styles.input} placeholder="Senha" secureTextEntry value={senha} onChangeText={setSenha} />
+        <TextInput
+          style={styles.input}
+          placeholder="CPF"
+          value={cpf}
+          onChangeText={text => setCpf(formatCpf(text))}
+          keyboardType="numeric"
+          maxLength={14}
+        />
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+          <TextInput
+            style={[styles.input, { flex: 1, marginBottom: 0 }]}
+            placeholder="Senha"
+            secureTextEntry={!showSenha}
+            value={senha}
+            onChangeText={setSenha}
+          />
+          <TouchableOpacity onPress={() => setShowSenha(!showSenha)} style={{ position: 'absolute', right: 10 }}>
+            <Text style={{ color: '#2196F3', fontWeight: 'bold', fontSize: 16 }}>
+              {showSenha ? '🙈' : '👁️'}
+            </Text>
+          </TouchableOpacity>
+        </View>
         <TouchableOpacity style={styles.button} onPress={handleLogin}>
           <Text style={styles.buttonText}>Entrar</Text>
         </TouchableOpacity>
