@@ -56,6 +56,7 @@ export default StyleSheet.create({
     marginBottom: 10,
     paddingHorizontal: 10,
     backgroundColor: '#FFFFFF',
+    color: '#222', // Garante texto escuro no input
   },
 
   // Botões

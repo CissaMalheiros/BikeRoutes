@@ -6,7 +6,7 @@ export default function WelcomeScreen({ navigation }) {
   return (
     <ImageBackground source={require('../assets/background2.jpg')} style={styles.background}>
       <View style={styles.container}>
-        <Text style={styles.title}>Bem-vindo ao CiclistaApp</Text>
+        <Text style={styles.title}>Bem-vindo ao BykeRoutes</Text>
         <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Login')}>
           <Text style={styles.buttonText}>Login</Text>
         </TouchableOpacity>

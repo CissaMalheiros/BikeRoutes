@@ -47,6 +47,7 @@ export default function LoginScreen({ navigation }) {
         <TextInput
           style={styles.input}
           placeholder="CPF"
+          placeholderTextColor="#888"
           value={cpf}
           onChangeText={text => setCpf(formatCpf(text))}
           keyboardType="numeric"
@@ -56,6 +57,7 @@ export default function LoginScreen({ navigation }) {
           <TextInput
             style={[styles.input, { flex: 1, marginBottom: 0 }]}
             placeholder="Senha"
+            placeholderTextColor="#888"
             secureTextEntry={!showSenha}
             value={senha}
             onChangeText={setSenha}

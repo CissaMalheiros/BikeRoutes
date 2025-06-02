@@ -90,6 +90,7 @@ export default function CadastroScreen({ navigation }) {
         <TextInput
           style={styles.input}
           placeholder="CPF"
+          placeholderTextColor="#888"
           value={cpf}
           onChangeText={text => setCpf(formatCpf(text))}
           keyboardType="numeric"
@@ -98,12 +99,14 @@ export default function CadastroScreen({ navigation }) {
         <TextInput
           style={styles.input}
           placeholder="Nome completo"
+          placeholderTextColor="#888"
           value={nome}
           onChangeText={setNome}
         />
         <TextInput
           style={styles.input}
           placeholder="Data de Nascimento (dd/mm/aaaa)"
+          placeholderTextColor="#888"
           value={dataNascimento}
           onChangeText={text => setDataNascimento(formatData(text))}
           keyboardType="numeric"
@@ -143,6 +146,7 @@ export default function CadastroScreen({ navigation }) {
         <TextInput
           style={styles.input}
           placeholder="Telefone"
+          placeholderTextColor="#888"
           value={telefone}
           onChangeText={text => setTelefone(formatTelefone(text))}
           keyboardType="phone-pad"
@@ -151,6 +155,7 @@ export default function CadastroScreen({ navigation }) {
         <TextInput
           style={styles.input}
           placeholder="Email"
+          placeholderTextColor="#888"
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
@@ -159,6 +164,7 @@ export default function CadastroScreen({ navigation }) {
         <TextInput
           style={styles.input}
           placeholder="Senha"
+          placeholderTextColor="#888"
           secureTextEntry
           value={senha}
           onChangeText={setSenha}
@@ -166,6 +172,7 @@ export default function CadastroScreen({ navigation }) {
         <TextInput
           style={styles.input}
           placeholder="Confirmar senha"
+          placeholderTextColor="#888"
           secureTextEntry
           value={confirmarSenha}
           onChangeText={setConfirmarSenha}

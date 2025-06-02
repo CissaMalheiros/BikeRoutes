@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "CiclistaApp",
-    "slug": "CiclistaApp",
+    "name": "BykeRoutes",
+    "slug": "BykeRoutes",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -20,7 +20,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.cissamalheiros.CiclistaApp",
+      "package": "com.cissamalheiros.BykeRoutes",
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
@@ -35,7 +35,7 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "af9bd060-33b9-47ec-b649-5534e0852178"
+        "projectId": "296abbe5-d9a2-4cd0-8dc2-80b3af807074"
       }
     }
   }
