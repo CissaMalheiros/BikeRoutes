@@ -139,9 +139,7 @@ export default function TrackingScreen({ route, navigation }) {
   };
 
   const resetTracking = () => {
-    setSeconds(0);
-    setRouteCoords([]);
-    setShowSummary(false);
+    navigation.goBack(); // Volta para a tela anterior (seleção de rota)
   };
 
   let text = 'Aguardando...';

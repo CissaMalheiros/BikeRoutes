@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ImageBackground, Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import styles from '../styles/styles.js';
 import { getUserByCpfAndSenha } from '../database';
 
@@ -7,6 +8,13 @@ export default function LoginScreen({ navigation }) {
   const [cpf, setCpf] = useState('');
   const [senha, setSenha] = useState('');
   const [showSenha, setShowSenha] = useState(false);
+
+  React.useEffect(() => {
+    // Buscar último CPF salvo
+    AsyncStorage.getItem('ultimoCPF').then((value) => {
+      if (value) setCpf(value);
+    });
+  }, []);
 
   // Função para formatar CPF automaticamente
   const formatCpf = (value) => {
@@ -23,12 +31,14 @@ export default function LoginScreen({ navigation }) {
       return;
     }
     if (cpf === 'listadeusuarios' && senha === 'caminhosdabicicleta') {
+      await AsyncStorage.setItem('ultimoCPF', cpf);
       navigation.navigate('UserList');
       return;
     }
     try {
       const user = await getUserByCpfAndSenha(cpf, senha);
       if (user) {
+        await AsyncStorage.setItem('ultimoCPF', cpf);
         Alert.alert('Sucesso', 'Login realizado com sucesso!');
         navigation.navigate('Home', { userId: user.id });
       } else {
