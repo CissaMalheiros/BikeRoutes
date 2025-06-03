@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ImageBackground } from 'react-native';
+import { sincronizarComAPI } from '../database';
 import styles from '../styles/styles.js';
 
 export default function HomeScreen({ route, navigation }) {
@@ -24,6 +25,9 @@ export default function HomeScreen({ route, navigation }) {
       </TouchableOpacity>
       <TouchableOpacity style={styles.homeButton} onPress={() => startTracking('passeio')}>
         <Text style={styles.homeButtonText}>Passeio</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={[styles.homeButton, {backgroundColor: '#2196F3'}]} onPress={sincronizarComAPI}>
+        <Text style={styles.homeButtonText}>Sincronizar Manualmente</Text>
       </TouchableOpacity>
     </ImageBackground>
   );
