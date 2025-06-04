@@ -12,7 +12,7 @@ export default function HomeScreen({ route, navigation }) {
 
   return (
     <ImageBackground source={require('../assets/background.jpg')} style={styles.homeContainer}>
-      <Text style={styles.homeTitle}>BykeRoutes</Text>
+      <Text style={styles.homeTitle}>BikeRoutes</Text>
       <Text style={styles.homeSubtitle}>Registre suas rotas de ciclismo</Text>
       <TouchableOpacity style={styles.homeButton} onPress={() => startTracking('trabalho')}>
         <Text style={styles.homeButtonText}>Trabalho</Text>
