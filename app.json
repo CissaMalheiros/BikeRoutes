@@ -35,8 +35,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "296abbe5-d9a2-4cd0-8dc2-80b3af807074"
+        "projectId": "ddd92319-8002-46af-8e12-3399a4371a2d"
       }
-    }
+    },
+    "owner": "cissamalheiros"
   }
 }
