@@ -1,3 +1,4 @@
+// Tela de cadastro de novo usuário
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ImageBackground, Alert } from 'react-native';
 import styles from '../styles/styles.js';
@@ -14,18 +15,16 @@ export default function CadastroScreen({ navigation }) {
   const [senha, setSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
 
-  // Função para formatar CPF automaticamente
+  // Formata o CPF conforme o usuário digita
   const formatCpf = (value) => {
-    // Remove tudo que não for número
     value = value.replace(/\D/g, '');
-    // Aplica a máscara
     value = value.replace(/(\d{3})(\d)/, '$1.$2');
     value = value.replace(/(\d{3})(\d)/, '$1.$2');
     value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
     return value;
   };
 
-  // Função para formatar telefone brasileiro
+  // Formata o telefone brasileiro
   const formatTelefone = (value) => {
     value = value.replace(/\D/g, '');
     value = value.replace(/(\d{2})(\d)/, '($1) $2');
@@ -33,7 +32,7 @@ export default function CadastroScreen({ navigation }) {
     return value;
   };
 
-  // Função para formatar data de nascimento
+  // Formata a data de nascimento para dd/mm/aaaa
   const formatData = (value) => {
     value = value.replace(/\D/g, '');
     value = value.replace(/(\d{2})(\d)/, '$1/$2');
@@ -42,6 +41,7 @@ export default function CadastroScreen({ navigation }) {
     return value;
   };
 
+  // Realiza o cadastro do usuário
   const handleCadastro = async () => {
     if (!cpf || !nome || !telefone || !sexo || !email || !dataNascimento || !senha || !confirmarSenha) {
       Alert.alert('Erro', 'Por favor, preencha todos os campos.');
@@ -67,6 +67,7 @@ export default function CadastroScreen({ navigation }) {
       Alert.alert('Erro', 'As senhas não coincidem.');
       return;
     }
+    // Coleta informações do dispositivo para salvar junto ao usuário
     const deviceInfo = {
       fabricante: Device.manufacturer || 'Desconhecido',
       modelo: Device.modelName || 'Desconhecido',

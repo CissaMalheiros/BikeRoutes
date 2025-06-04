@@ -1,3 +1,4 @@
+// Tela inicial após login, permite iniciar registro de rotas e sincronizar manualmente
 import React from 'react';
 import { View, Text, TouchableOpacity, ImageBackground } from 'react-native';
 import { sincronizarComAPI } from '../database';
@@ -6,6 +7,7 @@ import styles from '../styles/styles.js';
 export default function HomeScreen({ route, navigation }) {
   const { userId } = route.params;
 
+  // Navega para a tela de registro de trajeto, passando o tipo
   const startTracking = (type) => {
     navigation.navigate('Tracking', { routeType: type, userId });
   };

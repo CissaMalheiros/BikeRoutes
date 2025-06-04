@@ -1,3 +1,4 @@
+// Tela de registro de trajeto, exibe mapa e controla o rastreamento do percurso
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, Alert, Platform } from 'react-native';
 import { WebView } from 'react-native-webview';
@@ -6,6 +7,7 @@ import styles from '../styles/styles.js';
 import { addRota } from '../database';
 import { formatTime } from '../utils/format';
 
+// Solicita permissões de localização ao usuário
 async function pedirPermissoes() {
   const { status: fgStatus } = await Location.requestForegroundPermissionsAsync();
   if (fgStatus !== 'granted') {
@@ -20,8 +22,8 @@ async function pedirPermissoes() {
   return true;
 }
 
+// Gera o HTML do mapa Leaflet com OSM, marcador e rota
 function getLeafletHtml(location, routeCoords) {
-  // Gera o HTML do mapa Leaflet com OSM, marcador e rota
   const lat = location ? location.coords.latitude : -23.5505;
   const lng = location ? location.coords.longitude : -46.6333;
   const polyline = routeCoords.length > 0
@@ -72,6 +74,7 @@ export default function TrackingScreen({ route, navigation }) {
   const [pauseAccum, setPauseAccum] = useState(0);
   const pauseStartRef = useRef(null);
 
+  // Solicita permissões ao iniciar a tela
   useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
@@ -87,6 +90,7 @@ export default function TrackingScreen({ route, navigation }) {
     })();
   }, []);
 
+  // Inicia ou pausa o rastreamento de localização
   useEffect(() => {
     if (isTracking && !isPaused) {
       Location.watchPositionAsync(
@@ -154,6 +158,7 @@ export default function TrackingScreen({ route, navigation }) {
     setSeconds(0);
   };
 
+  // Finaliza o tracking e salva a rota
   const stopTracking = async () => {
     setIsTracking(false);
     setIsPaused(false);
@@ -161,8 +166,9 @@ export default function TrackingScreen({ route, navigation }) {
     await addRota(userId, routeType, routeCoords, formatTime(seconds));
   };
 
+  // Reinicia o tracking (volta para tela anterior)
   const resetTracking = () => {
-    navigation.goBack(); // Volta para a tela anterior (seleção de rota)
+    navigation.goBack();
   };
 
   let text = 'Aguardando...';

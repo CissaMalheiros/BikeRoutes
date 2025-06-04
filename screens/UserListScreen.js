@@ -1,3 +1,4 @@
+// Tela administrativa para listar usuários e visualizar rotas de cada um
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity } from 'react-native';
 import styles from '../styles/styles.js';
@@ -8,6 +9,7 @@ export default function UserListScreen() {
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [rotas, setRotas] = useState([]);
 
+  // Carrega a lista de usuários ao abrir a tela
   useEffect(() => {
     const loadUsers = async () => {
       const userList = await getUsers();
@@ -16,6 +18,7 @@ export default function UserListScreen() {
     loadUsers();
   }, []);
 
+  // Carrega as rotas do usuário selecionado
   useEffect(() => {
     if (selectedUserId) {
       const loadRotas = async () => {
@@ -26,6 +29,7 @@ export default function UserListScreen() {
     }
   }, [selectedUserId]);
 
+  // Renderiza cada usuário da lista
   const renderUserItem = ({ item }) => (
     <TouchableOpacity style={styles.userItem} onPress={() => setSelectedUserId(item.id)}>
       <Text style={styles.userText}>ID: {item.id}</Text>
@@ -42,6 +46,7 @@ export default function UserListScreen() {
     </TouchableOpacity>
   );
 
+  // Renderiza cada rota do usuário selecionado
   const renderRotaItem = ({ item }) => (
     <View style={styles.rotaItem}>
       <Text style={styles.rotaText}>Tipo: {item.tipo}</Text>

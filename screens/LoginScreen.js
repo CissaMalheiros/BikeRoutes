@@ -10,13 +10,13 @@ export default function LoginScreen({ navigation }) {
   const [showSenha, setShowSenha] = useState(false);
 
   React.useEffect(() => {
-    // Buscar último CPF salvo
+    // Recupera o último CPF salvo para facilitar o login do usuário
     AsyncStorage.getItem('ultimoCPF').then((value) => {
       if (value) setCpf(value);
     });
   }, []);
 
-  // Função para formatar CPF automaticamente
+  // Formata o CPF conforme o usuário digita
   const formatCpf = (value) => {
     value = value.replace(/\D/g, '');
     value = value.replace(/(\d{3})(\d)/, '$1.$2');
@@ -25,6 +25,7 @@ export default function LoginScreen({ navigation }) {
     return value;
   };
 
+  // Realiza o login do usuário
   const handleLogin = async () => {
     if (!cpf || !senha) {
       Alert.alert('Erro', 'Por favor, preencha todos os campos.');
