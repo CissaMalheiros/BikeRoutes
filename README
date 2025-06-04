@@ -75,7 +75,6 @@ BikeRoutes é um aplicativo móvel desenvolvido para ciclistas, permitindo regis
 ## Observações
 
 - O app utiliza permissões de localização em foreground e background.
-- O banco local pode ser limpo com a função `limparBancoLocal` (apenas para testes).
 - O projeto está pronto para integração com a API BikeRoutes.
 
 ---
