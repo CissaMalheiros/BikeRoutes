@@ -48,6 +48,10 @@ export default StyleSheet.create({
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 5,
     textAlign: 'center',
+    fontWeight: 'bold',
+    textShadowColor: '#000',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 4,
   },
 
   // Inputs
@@ -64,7 +68,7 @@ export default StyleSheet.create({
 
   // Botões
   button: {
-    backgroundColor: '#FF6B6B',
+    backgroundColor: '#000000', // Preto
     padding: 15,
     borderRadius: 25,
     alignItems: 'center',
@@ -74,22 +78,43 @@ export default StyleSheet.create({
     marginBottom: 10, // Adiciona espaçamento inferior entre botões
   },
   buttonText: {
-    color: '#FFFFFF',
+    color: '#FFFFFF', // Branco
     fontSize: 18,
     fontWeight: 'bold',
   },
   buttonDisabled: {
     backgroundColor: '#ccc',
   },
+  // Botão feminino (mantém vermelho)
+  buttonFeminino: {
+    backgroundColor: '#FF6B6B',
+    padding: 15,
+    borderRadius: 25,
+    alignItems: 'center',
+    marginTop: 10,
+    width: '80%',
+    alignSelf: 'center',
+    marginBottom: 10,
+  },
+  buttonFemininoText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
   linkText: {
-    color: '#FF6B6B',
+    color: '#FFFFFF', // Branco
     marginTop: 15,
     textAlign: 'center',
+    backgroundColor: 'transparent',
+    fontWeight: 'bold',
+    textShadowColor: '#000',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
   },
 
   // Botões Home
   homeButton: {
-    backgroundColor: '#FF6B6B',
+    backgroundColor: '#000000', // Preto
     padding: 15,
     borderRadius: 25,
     marginTop: 10,
@@ -97,7 +122,7 @@ export default StyleSheet.create({
     alignItems: 'center',
   },
   homeButtonText: {
-    color: '#FFFFFF',
+    color: '#FFFFFF', // Branco
     fontSize: 18,
     fontWeight: 'bold',
   },
@@ -160,7 +185,7 @@ export default StyleSheet.create({
     color: '#222',
   },
   summaryButton: {
-    backgroundColor: '#FF6B6B',
+    backgroundColor: '#000000', // Preto
     padding: 15,
     borderRadius: 25,
     width: '50%',
@@ -168,7 +193,7 @@ export default StyleSheet.create({
     marginTop: 10,
   },
   summaryButtonText: {
-    color: '#FFFFFF',
+    color: '#FFFFFF', // Branco
     fontSize: 18,
     fontWeight: 'bold',
   },

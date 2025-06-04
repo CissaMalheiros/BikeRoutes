@@ -67,6 +67,11 @@ export default function TrackingScreen({ route, navigation }) {
   const timerRef = useRef(null);
   const locationSubscription = useRef(null);
 
+  // Cronômetro robusto: usa horário real para funcionar mesmo em background/minimizado
+  const [startTimestamp, setStartTimestamp] = useState(null);
+  const [pauseAccum, setPauseAccum] = useState(0);
+  const pauseStartRef = useRef(null);
+
   useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
@@ -111,24 +116,42 @@ export default function TrackingScreen({ route, navigation }) {
     };
   }, [isTracking, isPaused]);
 
+  // Pausa o tracking
+  const pauseTracking = () => {
+    setIsPaused(true);
+    pauseStartRef.current = Date.now();
+  };
+
+  // Continua o tracking após pausa
   useEffect(() => {
-    if (isTracking && !isPaused) {
-      timerRef.current = setInterval(() => {
-        setSeconds((prevSeconds) => prevSeconds + 1);
+    if (!isPaused && isTracking && pauseStartRef.current) {
+      setPauseAccum((prev) => prev + (Date.now() - pauseStartRef.current));
+      pauseStartRef.current = null;
+    }
+  }, [isPaused, isTracking]);
+
+  // Atualiza o tempo baseado no relógio real
+  useEffect(() => {
+    let interval = null;
+    if (isTracking && !isPaused && startTimestamp) {
+      interval = setInterval(() => {
+        const now = Date.now();
+        setSeconds(Math.floor((now - startTimestamp - pauseAccum) / 1000));
       }, 1000);
     } else if (!isTracking || isPaused) {
-      clearInterval(timerRef.current);
+      clearInterval(interval);
     }
-    return () => clearInterval(timerRef.current);
-  }, [isTracking, isPaused]);
+    return () => clearInterval(interval);
+  }, [isTracking, isPaused, startTimestamp, pauseAccum]);
 
+  // Inicia o tracking
   const startTracking = () => {
     setIsTracking(true);
     setIsPaused(false);
-  };
-
-  const pauseTracking = () => {
-    setIsPaused(true);
+    const now = Date.now();
+    setStartTimestamp(now);
+    setPauseAccum(0);
+    setSeconds(0);
   };
 
   const stopTracking = async () => {
