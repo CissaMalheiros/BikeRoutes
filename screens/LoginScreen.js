@@ -30,11 +30,6 @@ export default function LoginScreen({ navigation }) {
       Alert.alert('Erro', 'Por favor, preencha todos os campos.');
       return;
     }
-    if (cpf === 'listadeusuarios' && senha === 'caminhosdabicicleta') {
-      await AsyncStorage.setItem('ultimoCPF', cpf);
-      navigation.navigate('UserList');
-      return;
-    }
     try {
       const user = await getUserByCpfAndSenha(cpf, senha);
       if (user) {

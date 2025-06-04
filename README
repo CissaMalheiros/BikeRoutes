@@ -1,53 +1,83 @@
 # BikeRoutes
 
-BikeRoutes é um aplicativo móvel desenvolvido para ciclistas, permitindo que eles registrem suas rotas de ciclismo, façam login, cadastrem-se e visualizem suas rotas em um mapa.
+BikeRoutes é um aplicativo móvel desenvolvido para ciclistas, permitindo registrar, visualizar e sincronizar rotas de ciclismo, com cadastro de usuários e integração com banco de dados local (SQLite) e remoto (PostgreSQL via API).
 
 ## Funcionalidades
 
-- **Cadastro de Usuário**: Permite que novos usuários se cadastrem no aplicativo.
-- **Login de Usuário**: Permite que usuários existentes façam login.
-- **Registro de Rotas**: Registra as rotas de ciclismo dos usuários, categorizando-as por tipo (trabalho, escola, casa, passeio).
-- **Visualização de Rotas**: Exibe as rotas registradas em um mapa.
-- **Resumo de Trajeto**: Mostra um resumo do trajeto após o término do registro.
+- **Cadastro de Usuário**: Cadastro com CPF, nome, telefone, sexo, email, data de nascimento, senha e informações do dispositivo.
+- **Login de Usuário**: Login por CPF e senha, com salvamento do último CPF utilizado.
+- **Registro de Rotas**: Registra rotas de ciclismo por tipo (trabalho, escola, casa, passeio), armazena coordenadas e tempo do trajeto.
+- **Visualização de Rotas**: Exibe rotas registradas em um mapa interativo (Leaflet/OpenStreetMap).
+- **Resumo de Trajeto**: Mostra resumo do trajeto após o término do registro.
+- **Lista de Usuários e Rotas**: Tela administrativa para listar usuários e visualizar rotas de cada um.
+- **Sincronização Automática e Manual**: Sincroniza dados locais com a API remota sempre que houver conexão com a internet ou manualmente.
+- **Validação de Dados**: Validação de CPF, telefone, email e data de nascimento no cadastro.
 
 ## Tecnologias Utilizadas
 
-- **React Native**: Framework para desenvolvimento de aplicativos móveis.
-- **Expo**: Plataforma para desenvolvimento de aplicativos React Native.
-- **SQLite**: Banco de dados local para armazenamento de dados do usuário.
-- **React Navigation**: Biblioteca para navegação entre telas no React Native.
-- **Expo Location**: Biblioteca para acesso à localização do dispositivo.
-- **React Native Maps**: Biblioteca para exibição de mapas e rotas.
+- **React Native** (Expo)
+- **SQLite** (expo-sqlite)
+- **React Navigation**
+- **Expo Location**
+- **React Native Maps** e **Leaflet** (via WebView)
+- **@react-native-async-storage/async-storage**
+- **@react-native-community/netinfo** (detecção de conexão)
+- **Integração com API Node.js/Express/PostgreSQL**
 
 ## Estrutura do Projeto
 
-- `App.js`: Arquivo principal do aplicativo, contendo a navegação e as telas.
-- `CadastroScreen.js`: Tela de cadastro de usuário.
-- `LoginScreen.js`: Tela de login de usuário.
-- `WelcomeScreen.js`: Tela de boas-vindas com opções de login e cadastro.
-- `database.js`: Arquivo de configuração e manipulação do banco de dados SQLite.
-- `assets/`: Pasta contendo os arquivos de imagem utilizados no aplicativo.
-- `package.json`: Arquivo de configuração do projeto e dependências.
+- `App.js`: Inicialização do app, navegação e sincronização.
+- `database/index.js`: Lógica de banco local, sincronização e utilitários.
+- `screens/`: Telas do app (Cadastro, Login, Home, Tracking, UserList, Welcome).
+- `navigation/StackNavigator.js`: Navegação entre telas.
+- `styles/styles.js`: Estilos globais.
+- `utils/format.js`: Funções utilitárias de formatação.
+- `assets/`: Imagens e ícones.
+- `package.json`: Dependências e scripts.
 
 ## Instalação
 
-1. Clone o repositório:
-
-   git clone [https://github.com/seu-usuario/CiclistaApp.git](https://github.com/seu-usuario/CiclistaApp.git)
-   cd CiclistaApp
-
+1. Clone o repositório ou copie a pasta `CiclistaApp` para seu ambiente local.
 2. Instale as dependências:
 
-> npm install
+   ```bash
+   npm install
+   ```
 
-1. Inicie o aplicativo:
+3. Inicie o aplicativo:
 
-> npx expo start
+   ```bash
+   npx expo start
+   ```
 
 ## Uso
 
-Abra o aplicativo no seu emulador android.
-Na tela de boas-vindas, escolha entre "Login" ou "Cadastro".
-Após o login, você será direcionado para a tela inicial, onde poderá escolher o tipo de trajeto para registrar.
-Durante o trajeto, o aplicativo registrará sua localização e exibirá a rota no mapa.
-Ao finalizar o trajeto, um resumo será exibido com o tempo total e a rota percorrida.
+- Abra o app no emulador Android/iOS ou dispositivo físico.
+- Na tela de boas-vindas, escolha "Login" ou "Cadastro".
+- Após login, escolha o tipo de trajeto para registrar.
+- Durante o trajeto, o app registra localização e exibe a rota no mapa.
+- Ao finalizar, um resumo é exibido.
+- A sincronização com o banco remoto ocorre automaticamente ao ficar online ou manualmente pelo botão na tela inicial.
+
+## Sincronização com API
+
+- O app armazena dados localmente e sincroniza com a API remota (Node.js/Express/PostgreSQL) quando possível.
+- Sincroniza usuários e rotas, incluindo todas as coordenadas do trajeto.
+- A URL da API pode ser ajustada em `database/index.js`.
+
+## Scripts Úteis
+
+- `npm start` — Inicia o projeto Expo.
+- `npm run android` — Inicia no emulador Android.
+- `npm run ios` — Inicia no emulador iOS.
+- `npm run web` — Inicia no navegador.
+
+## Observações
+
+- O app utiliza permissões de localização em foreground e background.
+- O banco local pode ser limpo com a função `limparBancoLocal` (apenas para testes).
+- O projeto está pronto para integração com a API BikeRoutes.
+
+---
+
+Desenvolvido para integração com a API BikeRoutes e banco de dados remoto PostgreSQL.
