@@ -172,10 +172,12 @@ export const marcarRotaSincronizada = async (id) => {
 // Controle para evitar sincronizações concorrentes
 let syncLock = false;
 
+// URL da API remota
+const API_URL = 'http://191.52.15.23:3001';
+
 // Busca o id do usuário remoto pelo email
 async function getRemoteUserIdByEmail(email) {
   try {
-    const API_URL = 'http://192.168.3.127:3001';
     const res = await fetch(`${API_URL}/usuarios/email/${encodeURIComponent(email)}`);
     if (res.ok) {
       const user = await res.json();
@@ -194,7 +196,6 @@ export const sincronizarComAPI = async () => {
   }
   syncLock = true;
   try {
-    const API_URL = 'http://192.168.3.127:3001';
     // 1. Sincronizar usuários
     const users = await getUsersNaoSincronizados();
     console.log('Usuários não sincronizados:', users.length, users);
