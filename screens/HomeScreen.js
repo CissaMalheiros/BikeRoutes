@@ -1,6 +1,6 @@
 // Tela inicial após login, permite iniciar registro de rotas e sincronizar manualmente
 import React from 'react';
-import { View, Text, TouchableOpacity, ImageBackground } from 'react-native';
+import { View, Text, TouchableOpacity, ImageBackground, Alert } from 'react-native';
 import { sincronizarComAPI } from '../database';
 import styles from '../styles/styles.js';
 
@@ -10,6 +10,15 @@ export default function HomeScreen({ route, navigation }) {
   // Navega para a tela de registro de trajeto, passando o tipo
   const startTracking = (type) => {
     navigation.navigate('Tracking', { routeType: type, userId });
+  };
+
+  // Nova função para sincronização manual com feedback
+  const handleSync = () => {
+    sincronizarComAPI(
+      (msg) => Alert.alert('Sincronização', msg || 'Sincronização concluída!'),
+      (err) => Alert.alert('Erro de Sincronização', err || 'Erro ao sincronizar.'),
+      (nothingMsg) => Alert.alert('Sincronização', nothingMsg || 'Tudo já está sincronizado!')
+    );
   };
 
   return (
@@ -28,7 +37,7 @@ export default function HomeScreen({ route, navigation }) {
       <TouchableOpacity style={styles.homeButton} onPress={() => startTracking('passeio')}>
         <Text style={styles.homeButtonText}>Passeio</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={[styles.homeButton, {backgroundColor: '#2196F3'}]} onPress={sincronizarComAPI}>
+      <TouchableOpacity style={[styles.homeButton, {backgroundColor: '#2196F3'}]} onPress={handleSync}>
         <Text style={styles.homeButtonText}>Sincronizar Manualmente</Text>
       </TouchableOpacity>
     </ImageBackground>

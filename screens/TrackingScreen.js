@@ -69,6 +69,9 @@ export default function TrackingScreen({ route, navigation }) {
   const timerRef = useRef(null);
   const locationSubscription = useRef(null);
 
+  // Novo: para guardar o tempo acumulado antes de pausar
+  const [accumulatedSeconds, setAccumulatedSeconds] = useState(0);
+
   // Cronômetro robusto: usa horário real para funcionar mesmo em background/minimizado
   const [startTimestamp, setStartTimestamp] = useState(null);
   const [pauseAccum, setPauseAccum] = useState(0);
@@ -120,50 +123,84 @@ export default function TrackingScreen({ route, navigation }) {
     };
   }, [isTracking, isPaused]);
 
-  // Pausa o tracking
-  const pauseTracking = () => {
-    setIsPaused(true);
-    pauseStartRef.current = Date.now();
+  // Inicia o rastreamento de localização
+  const startLocationTracking = async () => {
+    if (locationSubscription.current) {
+      locationSubscription.current.remove();
+      locationSubscription.current = null;
+    }
+    locationSubscription.current = await Location.watchPositionAsync(
+      {
+        accuracy: Location.Accuracy.High,
+        timeInterval: 1000,
+        distanceInterval: 1,
+      },
+      (newLocation) => {
+        setLocation(newLocation);
+        setRouteCoords((prevRoute) => [...prevRoute, newLocation]);
+      }
+    );
   };
 
-  // Continua o tracking após pausa
-  useEffect(() => {
-    if (!isPaused && isTracking && pauseStartRef.current) {
-      setPauseAccum((prev) => prev + (Date.now() - pauseStartRef.current));
-      pauseStartRef.current = null;
+  // Para o rastreamento de localização
+  const stopLocationTracking = () => {
+    if (locationSubscription.current) {
+      locationSubscription.current.remove();
+      locationSubscription.current = null;
     }
-  }, [isPaused, isTracking]);
+  };
 
-  // Atualiza o tempo baseado no relógio real
-  useEffect(() => {
-    let interval = null;
-    if (isTracking && !isPaused && startTimestamp) {
-      interval = setInterval(() => {
-        const now = Date.now();
-        setSeconds(Math.floor((now - startTimestamp - pauseAccum) / 1000));
-      }, 1000);
-    } else if (!isTracking || isPaused) {
-      clearInterval(interval);
+  // Inicia o cronômetro
+  const startTimer = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setSeconds((prev) => prev + 1);
+    }, 1000);
+  };
+
+  // Para o cronômetro
+  const stopTimer = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
     }
-    return () => clearInterval(interval);
-  }, [isTracking, isPaused, startTimestamp, pauseAccum]);
+  };
 
-  // Inicia o tracking
-  const startTracking = () => {
-    setIsTracking(true);
-    setIsPaused(false);
-    const now = Date.now();
-    setStartTimestamp(now);
-    setPauseAccum(0);
-    setSeconds(0);
+  // Iniciar rastreamento e cronômetro
+  const startTracking = async () => {
+    if (!isTracking) {
+      setIsTracking(true);
+      setIsPaused(false);
+      setSeconds(accumulatedSeconds); // Continua de onde parou
+      await startLocationTracking();
+      startTimer();
+    } else if (isPaused) {
+      setIsPaused(false);
+      await startLocationTracking();
+      startTimer();
+    }
+  };
+
+  // Pausar rastreamento e cronômetro
+  const pauseTracking = () => {
+    if (isTracking && !isPaused) {
+      setIsPaused(true);
+      setAccumulatedSeconds(seconds); // Salva o tempo até aqui
+      stopLocationTracking();
+      stopTimer();
+    }
   };
 
   // Finaliza o tracking e salva a rota
   const stopTracking = async () => {
-    setIsTracking(false);
-    setIsPaused(false);
-    setShowSummary(true);
-    await addRota(userId, routeType, routeCoords, formatTime(seconds));
+    if (isTracking) {
+      setIsTracking(false);
+      setIsPaused(false);
+      stopLocationTracking();
+      stopTimer();
+      setShowSummary(true);
+      await addRota(userId, routeType, routeCoords, formatTime(seconds));
+    }
   };
 
   // Reinicia o tracking (volta para tela anterior)

@@ -173,7 +173,7 @@ export const marcarRotaSincronizada = async (id) => {
 let syncLock = false;
 
 // URL da API remota
-const API_URL = 'http://191.52.15.23:3001';
+const API_URL = 'https://bikeroutes.geati.camboriu.ifc.edu.br/';
 
 // Busca o id do usuário remoto pelo email
 async function getRemoteUserIdByEmail(email) {
@@ -189,58 +189,92 @@ async function getRemoteUserIdByEmail(email) {
   return null;
 }
 
-export const sincronizarComAPI = async () => {
+/**
+ * Sincroniza com a API remota.
+ * @param {function} onSuccess - callback chamado em caso de sucesso
+ * @param {function} onError - callback chamado em caso de erro
+ * @param {function} onNothingToSync - callback chamado se não houver nada para sincronizar
+ */
+export const sincronizarComAPI = async (onSuccess, onError, onNothingToSync) => {
   if (syncLock) {
     console.log('Sincronização já em andamento, ignorando chamada duplicada.');
+    if (onError) onError('Sincronização já em andamento.');
     return;
   }
   syncLock = true;
   try {
     // 1. Sincronizar usuários
     const users = await getUsersNaoSincronizados();
-    console.log('Usuários não sincronizados:', users.length, users);
-    for (const user of users) {
-      // Envia todos os dados do usuário
-      const res = await fetch(`${API_URL}/usuarios`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(user)
-      });
-      if (res.ok) {
-        await marcarUserSincronizado(user.id);
-      }
-    }
     // 2. Sincronizar rotas
     const rotas = await getRotasNaoSincronizadas();
-    console.log('Rotas não sincronizadas:', rotas.length, rotas);
-    for (const rota of rotas) {
-      // Busca o usuário local
-      const user = await getUsers();
-      const userAtual = user.find(u => u.id === rota.userId);
-      if (!userAtual) continue;
-      // Busca o id remoto pelo email
-      const usuario_id = await getRemoteUserIdByEmail(userAtual.email);
-      if (!usuario_id) {
-        console.log('Usuário remoto não encontrado para rota:', rota);
-        continue;
+
+    if (users.length === 0 && rotas.length === 0) {
+      if (onNothingToSync) onNothingToSync('Tudo já está sincronizado!');
+      syncLock = false;
+      return;
+    }
+
+    // Sincronizar usuários
+    for (const user of users) {
+      try {
+        const res = await fetch(`${API_URL}/usuarios`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(user)
+        });
+        if (res.ok) {
+          await marcarUserSincronizado(user.id);
+        } else {
+          const errMsg = await res.text();
+          throw new Error(`Erro ao sincronizar usuário: ${errMsg}`);
+        }
+      } catch (err) {
+        console.log('Erro de rede ao sincronizar usuário:', err);
+        if (onError) onError('Erro ao sincronizar usuário: ' + err.message);
+        syncLock = false;
+        return;
       }
-      const res = await fetch(`${API_URL}/rotas`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          usuario_id,
-          tipo: rota.tipo,
-          tempo: rota.tempo,
-          coordenadas: JSON.parse(rota.coordenadas)
-        })
-      });
-      if (res.ok) {
-        await marcarRotaSincronizada(rota.id);
+    }
+
+    // Sincronizar rotas
+    for (const rota of rotas) {
+      try {
+        const user = await getUsers();
+        const userAtual = user.find(u => u.id === rota.userId);
+        if (!userAtual) continue;
+        const usuario_id = await getRemoteUserIdByEmail(userAtual.email);
+        if (!usuario_id) {
+          console.log('Usuário remoto não encontrado para rota:', rota);
+          continue;
+        }
+        const res = await fetch(`${API_URL}/rotas`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            usuario_id,
+            tipo: rota.tipo,
+            tempo: rota.tempo,
+            coordenadas: JSON.parse(rota.coordenadas)
+          })
+        });
+        if (res.ok) {
+          await marcarRotaSincronizada(rota.id);
+        } else {
+          const errMsg = await res.text();
+          throw new Error(`Erro ao sincronizar rota: ${errMsg}`);
+        }
+      } catch (err) {
+        console.log('Erro de rede ao sincronizar rota:', err);
+        if (onError) onError('Erro ao sincronizar rota: ' + err.message);
+        syncLock = false;
+        return;
       }
     }
     console.log('Sincronização concluída!');
+    if (onSuccess) onSuccess('Sincronização concluída com sucesso!');
   } catch (error) {
     console.log('Erro ao sincronizar com a API:', error);
+    if (onError) onError('Erro ao sincronizar com a API: ' + error.message);
   } finally {
     syncLock = false;
   }
