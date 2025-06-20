@@ -5,6 +5,31 @@ import styles from '../styles/styles.js';
 import { addUser } from '../database';
 import * as Device from 'expo-device';
 
+// Adicione a URL da API remota
+const API_URL = 'https://bikeroutes.geati.camboriu.ifc.edu.br/';
+
+// Função para verificar se usuário já existe na API remota
+async function usuarioExisteRemoto(cpf, email) {
+  try {
+    // Verifica por CPF
+    const resCpf = await fetch(`${API_URL}/usuarios/cpf/${encodeURIComponent(cpf)}`);
+    if (resCpf.ok) {
+      const user = await resCpf.json();
+      if (user && user.id) return true;
+    }
+    // Verifica por email
+    const resEmail = await fetch(`${API_URL}/usuarios/email/${encodeURIComponent(email)}`);
+    if (resEmail.ok) {
+      const user = await resEmail.json();
+      if (user && user.id) return true;
+    }
+  } catch (e) {
+    // Se não conseguir conectar, permite cadastro local (offline)
+    return false;
+  }
+  return false;
+}
+
 export default function CadastroScreen({ navigation }) {
   const [cpf, setCpf] = useState('');
   const [nome, setNome] = useState('');
@@ -65,6 +90,12 @@ export default function CadastroScreen({ navigation }) {
     }
     if (senha !== confirmarSenha) {
       Alert.alert('Erro', 'As senhas não coincidem.');
+      return;
+    }
+    // Verifica se já existe remotamente
+    const existeRemoto = await usuarioExisteRemoto(cpf, email);
+    if (existeRemoto) {
+      Alert.alert('Erro', 'Já existe um usuário com este CPF ou email cadastrado.');
       return;
     }
     // Coleta informações do dispositivo para salvar junto ao usuário

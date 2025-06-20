@@ -2,7 +2,29 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ImageBackground, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import styles from '../styles/styles.js';
-import { getUserByCpfAndSenha } from '../database';
+import { getUserByCpfAndSenha, addUser } from '../database';
+
+// Adicione a URL da API remota
+const API_URL = 'https://bikeroutes.geati.camboriu.ifc.edu.br/';
+
+// Função para autenticar usuário na API remota
+async function autenticarRemoto(cpf, senha) {
+  try {
+    const res = await fetch(`${API_URL}/usuarios/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cpf, senha })
+    });
+    if (res.ok) {
+      const user = await res.json();
+      return user;
+    }
+  } catch (e) {
+    // Falha de conexão, retorna null
+    return null;
+  }
+  return null;
+}
 
 export default function LoginScreen({ navigation }) {
   const [cpf, setCpf] = useState('');
@@ -32,13 +54,40 @@ export default function LoginScreen({ navigation }) {
       return;
     }
     try {
-      const user = await getUserByCpfAndSenha(cpf, senha);
+      let user = await getUserByCpfAndSenha(cpf, senha);
       if (user) {
         await AsyncStorage.setItem('ultimoCPF', cpf);
         Alert.alert('Sucesso', 'Login realizado com sucesso!');
         navigation.navigate('Home', { userId: user.id });
       } else {
-        Alert.alert('Erro', 'CPF ou senha incorretos.');
+        // Tenta login remoto
+        const userRemoto = await autenticarRemoto(cpf, senha);
+        if (userRemoto && userRemoto.id) {
+          // Salva usuário remoto no banco local para permitir login offline depois
+          // Adapta os campos conforme necessário
+          await addUser(
+            userRemoto.cpf,
+            userRemoto.nome,
+            userRemoto.telefone,
+            userRemoto.sexo,
+            userRemoto.email,
+            userRemoto.dataNascimento,
+            senha, // salva a senha digitada
+            {
+              fabricante: userRemoto.fabricante || 'Remoto',
+              modelo: userRemoto.modelo || 'Remoto',
+              serial: userRemoto.serial || 'Remoto',
+              versao: userRemoto.versao || 'Remoto'
+            }
+          );
+          // Busca novamente localmente para pegar o id local
+          user = await getUserByCpfAndSenha(cpf, senha);
+          await AsyncStorage.setItem('ultimoCPF', cpf);
+          Alert.alert('Sucesso', 'Login realizado com sucesso!');
+          navigation.navigate('Home', { userId: user.id });
+        } else {
+          Alert.alert('Erro', 'CPF ou senha incorretos.');
+        }
       }
     } catch (error) {
       Alert.alert('Erro', 'Ocorreu um erro ao tentar fazer login. Tente novamente.');
