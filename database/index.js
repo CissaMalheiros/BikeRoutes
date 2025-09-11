@@ -33,6 +33,7 @@ export const createTables = async () => {
       tipo TEXT,
       coordenadas TEXT,
       tempo TEXT,
+      idGrupoRota TEXT,
       sincronizado INTEGER DEFAULT 0,
       FOREIGN KEY (userId) REFERENCES users (id)
     );
@@ -81,6 +82,19 @@ export const updateDatabaseSchema = async () => {
   } else {
     console.log('Coluna sincronizado já existe na tabela rotas.');
   }
+
+  // Adicionar coluna idGrupoRota na tabela rotas
+  const rotaIdGrupoRotaExists = await db.getAllAsync(
+    `PRAGMA table_info(rotas);`
+  ).then((columns) => columns.some((col) => col.name === 'idGrupoRota'));
+  if (!rotaIdGrupoRotaExists) {
+    await db.execAsync(
+      `ALTER TABLE rotas ADD COLUMN idGrupoRota TEXT;`
+    );
+    console.log('Coluna idGrupoRota adicionada na tabela rotas!');
+  } else {
+    console.log('Coluna idGrupoRota já existe na tabela rotas.');
+  }
 };
 
 // Adicionar usuário com informações do dispositivo
@@ -123,16 +137,20 @@ export const getUserByCpfAndSenha = async (cpf, senha) => {
 };
 
 // Adicionar uma rota ao banco de dados
-export const addRota = async (userId, tipo, coordenadas, tempo) => {
+// Agora aceita o parâmetro idGrupoRota, que identifica o grupo de segmentos de uma mesma rota lógica.
+// Isso permite dividir trajetos longos em vários registros, mas agrupados por um mesmo id.
+export const addRota = async (userId, tipo, coordenadas, tempo, idGrupoRota) => {
   const db = await openDatabase();
   await db.runAsync(
-    'INSERT INTO rotas (userId, tipo, coordenadas, tempo, sincronizado) VALUES (?, ?, ?, ?, 0)',
-    [userId, tipo, JSON.stringify(coordenadas), tempo]
+    // Adicionada a coluna idGrupoRota na query de inserção.
+    'INSERT INTO rotas (userId, tipo, coordenadas, tempo, idGrupoRota, sincronizado) VALUES (?, ?, ?, ?, ?, 0)',
+    [userId, tipo, JSON.stringify(coordenadas), tempo, idGrupoRota]
   );
   console.log('Rota adicionada com sucesso!');
 };
 
 // Obter rotas de um usuário
+// Cada registro pode conter o campo idGrupoRota para agrupamento de segmentos.
 export const getRotasByUserId = async (userId) => {
   const db = await openDatabase();
   const result = await db.getAllAsync(
@@ -146,12 +164,14 @@ export const getRotasByUserId = async (userId) => {
 };
 
 // Função para buscar usuários não sincronizados
+// Sem alterações, apenas busca usuários que ainda não foram enviados para a API.
 export const getUsersNaoSincronizados = async () => {
   const db = await openDatabase();
   return await db.getAllAsync('SELECT * FROM users WHERE sincronizado = 0');
 };
 
 // Função para buscar rotas não sincronizadas
+// Agora cada rota pode ser um segmento, agrupado por idGrupoRota.
 export const getRotasNaoSincronizadas = async () => {
   const db = await openDatabase();
   return await db.getAllAsync('SELECT * FROM rotas WHERE sincronizado = 0');

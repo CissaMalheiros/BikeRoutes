@@ -7,6 +7,8 @@ import styles from '../styles/styles.js';
 import { addRota } from '../database';
 import { formatTime } from '../utils/format';
 
+const MAX_PONTOS_POR_SEGMENTO = 5000;
+
 // Solicita permissões de localização ao usuário
 async function pedirPermissoes() {
   const { status: fgStatus } = await Location.requestForegroundPermissionsAsync();
@@ -66,6 +68,7 @@ export default function TrackingScreen({ route, navigation }) {
   const [isPaused, setIsPaused] = useState(false);
   const [seconds, setSeconds] = useState(0);
   const [showSummary, setShowSummary] = useState(false);
+  const [idGrupoRota, setIdGrupoRota] = useState(null);
   const timerRef = useRef(null);
   const locationSubscription = useRef(null);
 
@@ -93,18 +96,38 @@ export default function TrackingScreen({ route, navigation }) {
     })();
   }, []);
 
+  // Função utilitária para verificar duplicidade
+  function isDuplicateCoord(newLoc, prevRoute) {
+    if (prevRoute.length === 0) return false;
+    const last = prevRoute[prevRoute.length - 1];
+    return (
+      last.coords.latitude === newLoc.coords.latitude &&
+      last.coords.longitude === newLoc.coords.longitude
+    );
+  }
+
   // Inicia ou pausa o rastreamento de localização
   useEffect(() => {
     if (isTracking && !isPaused) {
       Location.watchPositionAsync(
         {
           accuracy: Location.Accuracy.High,
-          timeInterval: 1000,
-          distanceInterval: 1,
+          timeInterval: 3000,
+          distanceInterval: 3,
         },
-        (newLocation) => {
+        async (newLocation) => {
           setLocation(newLocation);
-          setRouteCoords((prevRoute) => [...prevRoute, newLocation]);
+          setRouteCoords((prevRoute) => {
+            if (isDuplicateCoord(newLocation, prevRoute)) return prevRoute;
+            const updatedRoute = [...prevRoute, newLocation];
+            if (updatedRoute.length >= MAX_PONTOS_POR_SEGMENTO) {
+              // Salva segmento
+              addRota(userId, routeType, updatedRoute, formatTime(seconds), idGrupoRota);
+              // Mantém continuidade
+              return [updatedRoute[updatedRoute.length - 1]];
+            }
+            return updatedRoute;
+          });
         }
       ).then(subscription => {
         locationSubscription.current = subscription;
@@ -121,7 +144,7 @@ export default function TrackingScreen({ route, navigation }) {
         locationSubscription.current = null;
       }
     };
-  }, [isTracking, isPaused]);
+  }, [isTracking, isPaused, seconds, userId, routeType, idGrupoRota]);
 
   // Inicia o rastreamento de localização
   const startLocationTracking = async () => {
@@ -132,12 +155,20 @@ export default function TrackingScreen({ route, navigation }) {
     locationSubscription.current = await Location.watchPositionAsync(
       {
         accuracy: Location.Accuracy.High,
-        timeInterval: 1000,
-        distanceInterval: 1,
+        timeInterval: 3000,
+        distanceInterval: 3,
       },
-      (newLocation) => {
+      async (newLocation) => {
         setLocation(newLocation);
-        setRouteCoords((prevRoute) => [...prevRoute, newLocation]);
+        setRouteCoords((prevRoute) => {
+          if (isDuplicateCoord(newLocation, prevRoute)) return prevRoute;
+          const updatedRoute = [...prevRoute, newLocation];
+          if (updatedRoute.length >= MAX_PONTOS_POR_SEGMENTO) {
+            addRota(userId, routeType, updatedRoute, formatTime(seconds), idGrupoRota);
+            return [updatedRoute[updatedRoute.length - 1]];
+          }
+          return updatedRoute;
+        });
       }
     );
   };
@@ -169,6 +200,7 @@ export default function TrackingScreen({ route, navigation }) {
   // Iniciar rastreamento e cronômetro
   const startTracking = async () => {
     if (!isTracking) {
+      setIdGrupoRota(Date.now().toString()); // Gera idGrupoRota único
       setIsTracking(true);
       setIsPaused(false);
       setSeconds(accumulatedSeconds); // Continua de onde parou
@@ -199,7 +231,9 @@ export default function TrackingScreen({ route, navigation }) {
       stopLocationTracking();
       stopTimer();
       setShowSummary(true);
-      await addRota(userId, routeType, routeCoords, formatTime(seconds));
+      if (routeCoords.length > 0) {
+        await addRota(userId, routeType, routeCoords, formatTime(seconds), idGrupoRota);
+      }
     }
   };
 
